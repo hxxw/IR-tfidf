@@ -1,0 +1,4 @@
+"science" AND "religion"
+"science" OR "religion"
+("science" OR "religion") AND "book"
+"cancer" AND "food"
