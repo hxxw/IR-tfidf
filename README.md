@@ -4,11 +4,12 @@ A Multiprocessing Information Retrieval System from Texts in Python
 
 ## Getting Started
 
-Given your document root path (ex. 20_newsgroups), max length of a word (ex. 15), and the document path to your query file (query1.txt), multi-tfidf.py find top10 most relevant documents based on TF-IDF score.
-
 ```
 python multi_tfidf.py 20_newsgroups -max 15 -q query1.txt
 ```
+
+Given your document root path (ex. 20_newsgroups), max length of a word (ex. 15), and the document path to your query file (query1.txt), multi-tfidf.py finds the most relevant documents (top 10) based on the TF-IDF scores associated with your query.
+
 
 ## Requirement
 
@@ -16,15 +17,15 @@ multiprocess library can be installed with pip or easy_install:
 ```
 $ pip install multiprocess
 ```
-20_newsgroup data set is um
+
 ## Overview
 
-A TF-IDF based ranking algorithm finds top 10 documents from given large collection of text files in the following steps.
+Our TF-IDF based ranking algorithm finds top 10 documents from given large collection of text files in the following steps.
 
 1. Mapping text files into multi-processes to calculate Term Frequency (TF) per text file.
 2. Computing Document Frequency (DF) per term based on the given entire text files.
-3. Parsing user queries and find associated text files.
-4. For each query, reducing the TF-IDF score by accumulating the TF-IDF values among search terms.
+3. Parsing user queries and finding associated text files.
+4. For each query, reducing scores by accumulating the TF-IDF values among search terms.
 5. Getting top 10 documents based on the reduced TF-IDF score.
 
 ## Algorithm
@@ -52,19 +53,29 @@ tf[map_id_term[k]]=1+math.log(wfreq[k],2)
 ```
 ### Step 2
 
-Document Frequency (DF) is computed for each valid term using all the given data in this step. The motivation is to separate the two tasks: document search and TF-IDF calculation.
+Document Frequency (DF) is computed for each valid term using all the given data next. IDF should be computed by using only the documents which meet a user query, however, we compute DF with all the given data in this step.
 
-The algorithm is explained using the "science" OR "religion" query.
+Let us explain our idea with the "science" OR "religion" query. Assume we obtained the following documents for 'science' and 'religion' using all the given data as follows. 
 
 - DF['science'] = ['d1','d2','d3']
-- DF('religion') = ['d11','d12']
+- DF('religion') = ['d2','d4']
 
-The query, "science" OR "religion", finds the associated documents:
-- ['d1','d2','d3','d11','d12']
+The query, "science" OR "religion", finds the associated documents based on the above information.
 
-To compute TF-IDF for 'science' we take the set intersection operation between set(['d1','d2','d3']) \intersect set(['d1','d2','d3','d11','d12'])
+- Set 1 (result of the query): set(['d1','d2','d3','d4'])
 
-This looks redundant, however, applying further filtering (ex. temporal filtering) over ['d1','d2','d3','d11','d12'] may be efficiently realised.
+To compute TF-IDF for the term 'science', we take 'set intersection' operation:
+
+- Set 2: set(['d1','d2','d3','d4']) \cap set(['d1','d2','d3'])
+
+For computing IDF, len(Set1)/len(Set2) is required in Step 4.
+
+Note that Set 1 may be kept in a memory cash for further use (applying temporal filter for Set 1 for example).
+
+- Set 1': set(['d1','d2'])
+- Set 2': set(['d1','d2']) \cap set(['d1','d2','d3'])
+
+From a IR system point of view, Set 1 could be treated as a 'dynamic' set whereas Set 2 is a 'static' set.
 
 ### Step 3
 
