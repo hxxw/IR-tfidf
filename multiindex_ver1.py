@@ -4,6 +4,7 @@
 # Description:
 #  Term Frequency (TF) is computed using 'multiprocessing' library
 #  for (1) realising 'speed-up' and (2) demonstrating the usage of 'map' function.
+#  The resulted model is exported into a pickle file.
 
 import os,math,re,time,multiprocessing,itertools,pickle,argparse,sys
 from collections import defaultdict
@@ -117,7 +118,7 @@ def main(data_path,max_word,out_file):
 
 if __name__ == "__main__":
     
-    parser = argparse.ArgumentParser(description='Example: python multiindex.py 20_newsgroups -max 15 -o index.dump')
+    parser = argparse.ArgumentParser(description='Example: python multiindex_ver1.py 20_newsgroups -max 15 -o index.dump')
     parser.add_argument('-i','--path_data_file',nargs='?',default='20_newsgroups',const='20_newsgroups',type=str,action='store',help='Path to data file')
     parser.add_argument('-max','--word_length',nargs='?',default=15,const=15,type=int,action='store',help='Max Word Length')
     parser.add_argument('-o','--output_file',nargs='?',default='index.dump',const='index.dump',type=str,action='store',help='Output file in pickle')
