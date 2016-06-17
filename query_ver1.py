@@ -1,3 +1,8 @@
+#
+# Title: Query handling from a picle dump file.
+#
+# 
+
 import os,math,re,operator,time,pickle,argparse,sys
 from collections import defaultdict
 from datetime import datetime
