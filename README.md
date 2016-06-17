@@ -4,7 +4,7 @@ A Multiprocessing Information Retrieval System from Texts in Python
 
 ## Getting Started
 
-Given your document root path (ex. 20_newsgroup), max length of a word (ex. 15), and the document path to your query file (query1.txt), multi-tfidf.py find top10 most relevant documents based on TF-IDF score.
+Given your document root path (ex. 20_newsgroups), max length of a word (ex. 15), and the document path to your query file (query1.txt), multi-tfidf.py find top10 most relevant documents based on TF-IDF score.
 
 ```
 python multi_tfidf.py 20_newsgroups -max 15 -q query1.txt
