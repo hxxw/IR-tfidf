@@ -1,21 +1,32 @@
-import os,math,re,operator,time,codecs,multiprocessing,itertools,pickle,argparse,sys
+#-------------------------------------------------------------------------------
+# Title: Term Frequency by Map  
+#
+# Description:
+#  Term Frequency (TF) is computed using 'multiprocessing' library
+#  for (1) realising 'speed-up' and (2) demonstrating the usage of 'map' function.
+
+import os,math,re,time,multiprocessing,itertools,pickle,argparse,sys
 from collections import defaultdict
 
-#Multiprocessing for TF calculation
-#Reference for multiple arguments: http://stackoverflow.com/questions/5442910/python-multiprocessing-pool-map-for-multiple-arguments
+# Map documents into multi-processes
 def multi_tf(doclist,max_word_length):
     pool = multiprocessing.Pool(processes=50)
     stops=[]
     return pool.map(wrap_getTF,itertools.izip(doclist,itertools.repeat(max_word_length),itertools.repeat(stops)))
+
+# Wrapper for handling multi arguments
+# Reference: http://stackoverflow.com/questions/5442910/python-multiprocessing-pool-map-for-multiple-arguments
 def wrap_getTF(a_b_c):
     return getTF(*a_b_c)
+
+# TF calculation for the given document. Log-normalisation is applied for TF.
 def getTF(doc,max_w_length,stopwords):
     term_id=0
-    weight=defaultdict(float)
+    tf=defaultdict(float)
     map_term_id=defaultdict(int)
     map_id_term=defaultdict(str)
 
-    tf=defaultdict(int)
+    wfreq=defaultdict(int)
     with open(doc,'r') as f:
         for line in f:
             if len(line.strip()) > 0:
@@ -24,16 +35,19 @@ def getTF(doc,max_w_length,stopwords):
                     if not w in map_term_id.keys():
                         map_term_id[w]=term_id
                         map_id_term[term_id]=w
-                    tf[map_term_id[w]]+=1
+                    wfreq[map_term_id[w]]+=1
                     term_id+=1
-    for k in set(tf.keys()):
-        weight[map_id_term[k]]=1+math.log(tf[k],2)
+    for k in set(wfreq.keys()):
+        # Term Frequency: 1 + log(tf)
+        tf[map_id_term[k]]=1+math.log(wfreq[k],2)
     
-    return (doc,weight)
+    return (doc,tf)
 
+# Word Cleaning
 def word_clean(words):
     return map(lambda x: x.lower(), map(lambda x: re.sub("([^a-zA-Z]+$|^[^a-zA-Z]+)", "", x), words))
-                    
+
+# Get File Pathes
 def get_filepath(path):
     path_docs=list()
     for root, dirs, files in os.walk(path):
@@ -41,9 +55,15 @@ def get_filepath(path):
             path_docs.append(os.path.join(root,file))
     return path_docs
 
+# Document frequency (DF) per term
 def get_docfreq(RED):
+    #(Example: doc_freq['hello']=[file1,file2,...]).
+    # Note: this DF is based on the entire data files. Since TF-IDF is computed for a given query,
+    # we should make a subset of the [file1,file2,...] per query.
+
     doc_freq0=defaultdict(list)
     map_id_doc0=defaultdict(list)
+
     #Document Frequency per term
     for i,(doc,tf) in enumerate(RED):
         map_id_doc0[i]=doc
@@ -51,19 +71,8 @@ def get_docfreq(RED):
             doc_freq0[t].append(i) #i is the doc id    
     return (doc_freq0,map_id_doc0)
 
-
-if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description='Generating index and document frequency. Example: python multiindex2.py 20_newsgroups -l 15 -o index.dump')
-    parser.add_argument('-i','--path_data_file',nargs='?',default='20_newsgroups',const='20_newsgroups',type=str,action='store',help='Path to data file')
-    parser.add_argument('-l','--word_length',nargs='?',default=15,const=15,type=int,action='store',help='Max Word Length')
-    parser.add_argument('-o','--output_file',nargs='?',default='index.dump',const='index.dump',type=str,action='store',help='Output file in pickle')
-    
-    args = parser.parse_args(sys.argv[1:])
-    data_path=args.path_data_file
-    max_word=args.word_length
-    out_file=args.output_file
-    
+# Main
+def main(data_path,max_word,out_file):
     #
     #Step1: Get file path
     #
@@ -105,3 +114,17 @@ if __name__ == "__main__":
     #
     with open(out_file,'wb') as f:
         pickle.dump((tf_fin,doc_freq,map_id_doc),f)
+
+if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description='Example: python multiindex.py 20_newsgroups -max 15 -o index.dump')
+    parser.add_argument('-i','--path_data_file',nargs='?',default='20_newsgroups',const='20_newsgroups',type=str,action='store',help='Path to data file')
+    parser.add_argument('-max','--word_length',nargs='?',default=15,const=15,type=int,action='store',help='Max Word Length')
+    parser.add_argument('-o','--output_file',nargs='?',default='index.dump',const='index.dump',type=str,action='store',help='Output file in pickle')
+    
+    args = parser.parse_args(sys.argv[1:])
+    data_path=args.path_data_file
+    max_word=args.word_length
+    out_file=args.output_file
+
+    main(data_path,max_word,out_file)
