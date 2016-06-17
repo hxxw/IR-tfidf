@@ -1,5 +1,6 @@
 # IR-tfidf
-Information Retrieval by TF-IDF Ranking
+
+A TF-IDF based multiprocessing Information Retrieval System in Python
 
 ## Getting Started
 
@@ -37,6 +38,62 @@ def multi_tf(doclist,max_word_length):
     return pool.map(wrap_getTF,itertools.izip(doclist,itertools.repeat(max_word_length),itertools.repeat(stops)))
 ```
 
+During the TF calculation, words are filtered by applying stop-words and word-length conditions.
+
+```python
+list_terms=filter(lambda x: (1 < len(x) <= max_w_length) and (x not in stopwords), word_clean(re.split(r'\s+', line)))
+```
+
+Term-Frequency is log-normalised as follows.
+```python
+tf[map_id_term[k]]=1+math.log(wfreq[k],2)
+```
+### Step 2
+
+Document Frequency (DF) is computed for each valid term using all the given data in this step. The motivation is to separate the two tasks: document search and TF-IDF calculation.
+
+The algorithm is explained using the "science" OR "religion" query.
+
+- DF['science'] = ['d1','d2','d3']
+- DF('religion') = ['d11','d12']
+
+The query, "science" OR "religion", finds the associated documents:
+- ['d1','d2','d3','d11','d12']
+
+To compute TF-IDF for 'science' we take the set intersection operation between set(['d1','d2','d3']) \intersect set(['d1','d2','d3','d11','d12'])
+
+This looks redundant, however, applying further filtering (ex. temporal filtering) over ['d1','d2','d3','d11','d12'] may be easily realised.
+
+### Step 3
+
+Query parsing was implemented by referring the pyparsing textbook (http://shop.oreilly.com/product/9780596514235.do).
+
+### Step 4
+
+TF-IDF-base scoring function is implemented by accumulating TF-IDF values for search terms in a functional programming fashion.
+
+```python
+for doc in matched_docs:
+	scores[doc]=reduce(lambda sum,x: sum + tf[map_id_doc[doc]][x] * math.log(1.0+1.0*(len(matched_docs))/(len(matched_doc_freq[x])+1),2),set(list_terms),0)
+```
+Note that Inverse DF is defined with 'smoothing'.
+
+```python
+math.log(1.0+1.0*(len(matched_docs))/(len(matched_doc_freq[x])+1),2)
+```
+### Step 5
+
+Top 10 documents are shown based on the accumulated TF-IDF scores.
+
+## Future Work
+
+- Applying further filtering (ex. temporal filtering) can be implemented by extracting further informatin from documents.
+- A multi-processing versino of MapReduce is implemented on a single machine. Mapping the data into clusters can be realised by replacing the multiprosses part.
+- Exporting indexed result to local file is sometimes useful. We developed this idea by using 'pickle' dump model (multiindex_ver1.py and query_ver1.py in the git). Since exporting/loading model is slow, we did not report the details.
+- TF-IDF is not suited for CSV files. Z-score is an alternative measure for finding uncommonly common keywords. Depending on the data set, but we often observe the document frequency per term can be estimated in Normal distribution.
+
+
+
 
 ## Running the tests
 ```
@@ -57,15 +114,15 @@ is the max length of word to be processed, and
 is the path to your query file.
 
 Top10 ranking is shown for each query.
+
 ```
 $ python multi_tfidf.py 20_newsgroups -max 15 -q query1.txt
 file size: 19997
 Indexing Done. Processed 19997 files. elapsed_time:37.9550001621 [sec]
 DF Done. elapsed_time:2.60599994659 [sec]
+
 -----------------
-Search Query:
-Invalid search string
------------------
+
 Search Query:     "science" OR "religion"
 Search Query Logic: (set(docFreq['science']) | set(docFreq['religion']))
 Search Terms: ['science', 'religion']
@@ -83,7 +140,9 @@ Search Result Ranking (document name, score)
 20_newsgroups\alt.atheism\53567,        10.5989503169
 20_newsgroups\talk.religion.misc\83925, 10.5989503169
 Searched in:0.0160000324249[sec]
+
 -----------------
+
 Search Query:     "science" AND "religion"
 Search Query Logic: (set(docFreq['science']) & set(docFreq['religion']))
 Search Terms: ['science', 'religion']
@@ -101,7 +160,9 @@ Search Result Ranking (document name, score)
 20_newsgroups\alt.atheism\53340,        6.28218679318
 20_newsgroups\talk.religion.misc\83925, 6.28218679318
 Searched in:0.0[sec]
+
 -----------------
+
 Search Query: "science" AND "religion"
 Search Query Logic: (set(docFreq['science']) & set(docFreq['religion']))
 Search Terms: ['science', 'religion']
@@ -119,7 +180,9 @@ Search Result Ranking (document name, score)
 20_newsgroups\alt.atheism\53340,        6.28218679318
 20_newsgroups\talk.religion.misc\83925, 6.28218679318
 Searched in:0.0[sec]
+
 -----------------
+
 Search Query: "science" OR "religion"
 Search Query Logic: (set(docFreq['science']) | set(docFreq['religion']))
 Search Terms: ['science', 'religion']
@@ -137,7 +200,9 @@ Search Result Ranking (document name, score)
 20_newsgroups\alt.atheism\53567,        10.5989503169
 20_newsgroups\talk.religion.misc\83925, 10.5989503169
 Searched in:0.0350000858307[sec]
+
 -----------------
+
 Search Query: ("science" OR "religion") AND "book"
 Search Query Logic: ((set(docFreq['science']) | set(docFreq['religion'])) & set(docFreq['book']))
 Search Terms: ['science', 'religion', 'book']
@@ -155,7 +220,9 @@ Search Result Ranking (document name, score)
 20_newsgroups\talk.politics.mideast\76276,      9.60021899911
 20_newsgroups\alt.atheism\49960,        9.52873041658
 Searched in:0.0[sec]
+
 -----------------
+
 Search Query: "cancer" AND "food"
 Search Query Logic: (set(docFreq['cancer']) & set(docFreq['food']))
 Search Terms: ['cancer', 'food']
