@@ -1,6 +1,6 @@
 # IR-tfidf
 
-A TF-IDF based multiprocessing Information Retrieval System in Python
+A Multiprocessing Information Retrieval System from Texts in Python
 
 ## Getting Started
 
@@ -8,9 +8,9 @@ A TF-IDF based multiprocessing Information Retrieval System in Python
 python multi_tfidf.py 20_newsgroup -max 15 -q query1.txt
 ```
 
-### Prerequisities
+## Requirement
 
-multiprocess can be installed with pip or easy_install:
+multiprocess library can be installed with pip or easy_install:
 ```
 $ pip install multiprocess
 ```
@@ -62,7 +62,7 @@ The query, "science" OR "religion", finds the associated documents:
 
 To compute TF-IDF for 'science' we take the set intersection operation between set(['d1','d2','d3']) \intersect set(['d1','d2','d3','d11','d12'])
 
-This looks redundant, however, applying further filtering (ex. temporal filtering) over ['d1','d2','d3','d11','d12'] may be easily realised.
+This looks redundant, however, applying further filtering (ex. temporal filtering) over ['d1','d2','d3','d11','d12'] may be efficiently realised.
 
 ### Step 3
 
@@ -95,7 +95,7 @@ Top 10 documents are shown based on the accumulated TF-IDF scores.
 
 
 
-## Running the tests
+## Example
 ```
 python multi_tfidf.py 20_newsgroup -max 15 -q query1.txt
 ```
